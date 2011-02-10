@@ -9,9 +9,9 @@ This gem will simply generate the AWS EC2 signature so that you can use your own
 require 'ec2-signature'
 # pass a hash containing your aws auth params to new obj
 mysig = EC2Signature.new( {
-            :access_id => 'abcde12345fiow13jlaf1',
-            :secret_key => '1380adj13j43jklj32a',
-            :ec2_url => 'http://myec2server:8773/services/Cloud'
+            :awsaccessid => 'abcde12345fiow13jlaf1',
+            :awssecretkey => '1380adj13j43jklj32a',
+            :ec2url => 'http://myec2server:8773/services/Cloud'
           } )
 # generate the signature provided the query action you want to issue to your ec2 provider
 signature = mysig.sign( {'Action' => 'DescribeImages'} )
