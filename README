@@ -16,7 +16,7 @@ mysig = EC2Signature.new( {
 # generate the signature provided the query action you want to issue to your ec2 provider
 signature = mysig.sign( {'Action' => 'DescribeImages'} )
 # use the example net/http post method to post your signature to the ec2_url specified above
-mysig.post signature
+mysig.submit signature
 
 
 ##############################
@@ -28,4 +28,4 @@ signature = mysig.sign( {
                 'Action' => 'DescribeUser', 
                 'Name' => 'jsmith',
               } )
-mysig.post signature
+mysig.submit signature
