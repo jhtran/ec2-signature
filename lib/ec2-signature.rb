@@ -5,13 +5,14 @@ require 'cgi'
 
 class Ec2Signature
 
-  attr_accessor :accessid, :secretkey, :ec2url, :host, :port, :path, :scheme
+  attr_accessor :accessid, :secretkey, :ec2url, :host, :port, :path, :scheme, :method
 
-  def initialize creds
+  def initialize creds, method='POST'
     raise "Need a hash of AWS/EC2 credential info" unless creds.kind_of? Hash
     [:accessid, :secretkey, :ec2url].each do |a| 
       raise "Credential hash requires :accessid, :secretkey & :ec2url" unless creds[a]
     end
+    raise "Method can only be 'GET' or 'POST'" unless ['GET','POST'].include? method
     self.accessid = creds[:accessid]
     self.secretkey = creds[:secretkey]
     self.ec2url = creds[:ec2url]
@@ -20,6 +21,7 @@ class Ec2Signature
     self.scheme = uri.scheme
     self.path = uri.path
     self.port = uri.port
+    self.method = method
   end
 
   def sign actionparams={'Action'=>'DescribeInstances'}
@@ -40,7 +42,7 @@ class Ec2Signature
         body << "#{key}=#{CGI.escape(value.to_s).gsub(/\+/, '%20')}&"
       end
     end
-    string_to_sign = "POST\n#{host}:#{port}\n#{path}\n" << body.chop
+    string_to_sign = "#{method}\n#{host}:#{port}\n#{path}\n" << body.chop
     digest = OpenSSL::Digest::Digest.new('sha256')
     signed_string = OpenSSL::HMAC.digest(digest, secretkey, string_to_sign)
     body << "Signature=#{CGI.escape(Base64.encode64(signed_string).chomp!).gsub(/\+/, '%20')}"
@@ -48,10 +50,13 @@ class Ec2Signature
     body
   end
 
-  def post signature=sign
+  def submit signature=sign
     require 'net/http'
     http = Net::HTTP.new host, port
-    resp = http.post path, signature
+    resp = case method
+      when 'GET' then http.get path.concat('?'+signature)
+      when 'POST' then http.post path, signature
+    end
     resp.body
   end
 
