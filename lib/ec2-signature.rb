@@ -3,18 +3,18 @@ require 'openssl'
 require 'base64'
 require 'cgi'
 
-class Ec2Signature
+class EC2Signature
 
-  attr_accessor :accessid, :secretkey, :ec2url, :host, :port, :path, :scheme, :method
+  attr_accessor :awsaccessid, :awssecretkey, :ec2url, :host, :port, :path, :scheme, :method
 
   def initialize creds, method='POST'
     raise "Need a hash of AWS/EC2 credential info" unless creds.kind_of? Hash
-    [:accessid, :secretkey, :ec2url].each do |a| 
-      raise "Credential hash requires :accessid, :secretkey & :ec2url" unless creds[a]
+    [:awsaccessid, :awssecretkey, :ec2url].each do |a| 
+      raise "Credential hash requires :awsaccessid, :awssecretkey & :ec2url" unless creds[a]
     end
     raise "Method can only be 'GET' or 'POST'" unless ['GET','POST'].include? method
-    self.accessid = creds[:accessid]
-    self.secretkey = creds[:secretkey]
+    self.awsaccessid = creds[:awsaccessid]
+    self.awssecretkey = creds[:awssecretkey]
     self.ec2url = creds[:ec2url]
     uri = URI.parse creds[:ec2url]
     self.host = uri.host
@@ -29,7 +29,7 @@ class Ec2Signature
     raise "hash missing 'Action' key/value"  unless actionparams['Action']
 
     actionparams.merge!({
-      'AWSAccessKeyId'    => accessid,
+      'AWSAccessKeyId'    => awsaccessid,
       'SignatureMethod'   => 'HmacSHA256',
       'SignatureVersion'  => '2',
       'Timestamp'         => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -44,7 +44,7 @@ class Ec2Signature
     end
     string_to_sign = "#{method}\n#{host}:#{port}\n#{path}\n" << body.chop
     digest = OpenSSL::Digest::Digest.new('sha256')
-    signed_string = OpenSSL::HMAC.digest(digest, secretkey, string_to_sign)
+    signed_string = OpenSSL::HMAC.digest(digest, awssecretkey, string_to_sign)
     body << "Signature=#{CGI.escape(Base64.encode64(signed_string).chomp!).gsub(/\+/, '%20')}"
 
     body

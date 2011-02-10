@@ -1,5 +1,5 @@
-module Ec2
+module EC2
   module Signature
-    VERSION = "0.0.2"
+    VERSION = "0.0.3"
   end
 end

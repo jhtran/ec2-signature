@@ -4,7 +4,7 @@ require "ec2-signature/version"
 
 Gem::Specification.new do |s|
   s.name        = "ec2-signature"
-  s.version     = Ec2::Signature::VERSION
+  s.version     = EC2::Signature::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["John Tran"]
   s.email       = ["jtran@attinteractive.com"]
