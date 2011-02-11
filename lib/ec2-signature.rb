@@ -5,7 +5,7 @@ require 'cgi'
 
 class EC2Signature
 
-  attr_accessor :awsaccessid, :awssecretkey, :ec2url, :host, :port, :path, :scheme, :method
+  attr_accessor :awsaccessid, :awssecretkey, :ec2url, :host, :port, :path, :scheme, :method, :project
   attr_accessor :signature
 
   def initialize creds, method='POST'
@@ -25,12 +25,13 @@ class EC2Signature
     self.method = method
   end
 
-  def sign actionparams={'Action'=>'DescribeInstances'}
-    raise "hash of AWS EC2 web params action required" unless actionparams.kind_of? Hash
-    raise "hash missing 'Action' key/value"  unless actionparams['Action']
-
+  def sign action='DescribeInstances', actionparams={}
+    raise 'actionparams needs to be a Hash' unless actionparams.kind_of?(Hash)
+    # openstack requires project names added to end of awssecretkey to change project context
+    newaccessid = ( project ? awsaccessid+':'+project : awsaccessid )
     actionparams.merge!({
-      'AWSAccessKeyId'    => awsaccessid,
+      'Action'            => action,
+      'AWSAccessKeyId'    => newaccessid,
       'SignatureMethod'   => 'HmacSHA256',
       'SignatureVersion'  => '2',
       'Timestamp'         => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),

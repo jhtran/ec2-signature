@@ -14,7 +14,7 @@ mysig = EC2Signature.new( {
             :ec2url => 'http://myec2server:8773/services/Cloud'
           } )
 # generate the signature provided the query action you want to issue to your ec2 provider
-mysig.sign {'Action' => 'DescribeImages'} 
+mysig.sign 'DescribeImages'
 signature = mysig.signature
 # use the example net/http post method to post your signature to the ec2_url specified above
 mysig.submit 
@@ -25,5 +25,5 @@ mysig.submit
 ##############################
 # opennebula's aws/ec2 api implementation has a diff path for admin cmds
 mysig.path = '/services/Admin'
-signature = mysig.sign({ 'Action' => 'DescribeUser', 'Name' => 'jsmith', })
+signature = mysig.sign 'DescribeUser', {'Name' => 'jsmith', }
 mysig.submit
