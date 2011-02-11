@@ -6,6 +6,7 @@ require 'cgi'
 class EC2Signature
 
   attr_accessor :awsaccessid, :awssecretkey, :ec2url, :host, :port, :path, :scheme, :method
+  attr_accessor :signature
 
   def initialize creds, method='POST'
     raise "Need a hash of AWS/EC2 credential info" unless creds.kind_of? Hash
@@ -46,11 +47,11 @@ class EC2Signature
     digest = OpenSSL::Digest::Digest.new('sha256')
     signed_string = OpenSSL::HMAC.digest(digest, awssecretkey, string_to_sign)
     body << "Signature=#{CGI.escape(Base64.encode64(signed_string).chomp!).gsub(/\+/, '%20')}"
-
-    body
+    self.signature = body
+    self
   end
 
-  def submit signature=sign
+  def submit signature=signature
     require 'net/http'
     http = Net::HTTP.new host, port
     resp = case method
