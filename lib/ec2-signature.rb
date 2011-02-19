@@ -2,6 +2,7 @@ require 'uri'
 require 'openssl'
 require 'base64'
 require 'cgi'
+require 'net/http'
 
 class EC2Signature
 
@@ -52,14 +53,15 @@ class EC2Signature
     self
   end
 
-  def submit signature=signature
-    require 'net/http'
+  def submit action='DescribeInstances', actionparams={}
+    require 'crack' 
+    sign action, actionparams
     http = Net::HTTP.new host, port
     resp = case method
       when 'GET' then http.get path.concat('?'+signature)
       when 'POST' then http.post path, signature
     end
-    resp.body
+    result = Crack::XML.parse(resp.body)[action.concat('Response')]
   end
 
 end
