@@ -1,6 +1,6 @@
 Code borrowed from fog (https://github.com/geemus/fog).
 
-This gem will simply generate the AWS EC2 signature so that you can use your own HTTP methods and libraries to POST to your choice of AWS/EC2 compatible API servers such as Eucalyptus, OpenNebula, OpenAuth.  Apparently, most of the AWS/EC2 API gems out there are not compatible with the aforementioned cloud frameworks, due to running on a custom port they do not account for that when generating the signature.  Fog had implemented a compatible signature method, however, I did not want to use the EXCON http library implemented in it so I extracted the signature method only for use with my own choice of HTTP library.
+This gem will simply generate the AWS EC2 signature so that you can use your own HTTP methods and libraries to POST/GET to your choice of AWS/EC2 compatible API servers such as Eucalyptus, OpenNebula, OpenStack.  Apparently, most of the AWS/EC2 API gems out there are not compatible with the aforementioned cloud frameworks, due to running on a custom port they do not account for that when generating the signature.  Fog had implemented a compatible signature method, however, I did not want to use the EXCON http library implemented in it so I extracted the signature method only for use with my own choice of HTTP library.
 
 ##############################
 ####  OpenStack Example 1 ####
@@ -13,11 +13,11 @@ mysig = EC2Signature.new( {
             :awssecretkey => '1380adj13j43jklj32a',
             :ec2url => 'http://myec2server:8773/services/Cloud'
           } )
-# generate the signature provided the query action you want to issue to your ec2 provider
+# to generate a signature only, provide the query action you want to issue to your ec2 provider
 mysig.sign 'DescribeImages'
 signature = mysig.signature
-# use the example net/http post method to post your signature to the ec2_url specified above
-mysig.submit 
+# OR use the example net/http post method to post your signature to the ec2_url specified above
+mysig.submit 'DescribeImages'   # will parse the xml body and return a data hash
 
 
 ##############################
@@ -25,5 +25,8 @@ mysig.submit
 ##############################
 # opennebula's aws/ec2 api implementation has a diff path for admin cmds
 mysig.path = '/services/Admin'
-signature = mysig.sign 'DescribeUser', {'Name' => 'jsmith', }
-mysig.submit
+# generate only the signature if you want:
+mysig.sign 'DescribeUser', {'Name' => 'jsmith', }
+signature = mysig.signature
+# OR use the example net/http post method to post your signature to the ec2_url specified above
+mysig.submit 'DescribeUser', {'Name' => 'jsmith', }
