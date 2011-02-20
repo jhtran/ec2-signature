@@ -26,7 +26,7 @@ class EC2Signature
     self.method = method
   end
 
-  def sign action='DescribeInstances', actionparams={}
+  def sign action='DescribeInstances', actionparams={}, timestamp=Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     raise 'actionparams needs to be a Hash' unless actionparams.kind_of?(Hash)
     # openstack requires project names added to end of awssecretkey to change project context
     newaccessid = ( project ? awsaccessid+':'+project : awsaccessid )
@@ -35,7 +35,7 @@ class EC2Signature
       'AWSAccessKeyId'    => newaccessid,
       'SignatureMethod'   => 'HmacSHA256',
       'SignatureVersion'  => '2',
-      'Timestamp'         => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+      'Timestamp'         => timestamp
       'Version'           => '2010-08-31'
     })
 
