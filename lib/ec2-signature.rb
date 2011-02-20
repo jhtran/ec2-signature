@@ -53,9 +53,9 @@ class EC2Signature
     self
   end
 
-  def submit action='DescribeInstances', actionparams={}
+  def submit action='DescribeInstances', actionparams={}, timestamp=Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     require 'crack' 
-    sign action, actionparams
+    sign action, actionparams, timestamp
     http = Net::HTTP.new host, port
     resp = case method
       when 'GET' then http.get path.concat('?'+signature)
