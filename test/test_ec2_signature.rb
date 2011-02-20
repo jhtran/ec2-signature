@@ -97,6 +97,11 @@ describe EC2Signature do
       known_signature = 'AWSAccessKeyId=abc123&Action=DescribeInstances&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-02-20T06%3A25%3A50Z&Version=2010-08-31&Signature=0fuHYXhygt2osdqtnRww1WFR2nHMwk0wvhiCOxuS3AY%3D'
       @ec2.sign('DescribeInstances',{},known_timestamp).signature.must_equal known_signature
     end
+    it 'should append the ":project" string to awsaccessid in the signature (cgi escaped)' do
+      @ec2.sign.signature.must_match /KeyId=#{$creds[:awsaccessid]}&Action/ # before specifying project
+      @ec2.project = 'someproj'
+      @ec2.sign.signature.must_match /KeyId=#{CGI::escape $creds[:awsaccessid]+':someproj'}/
+    end
   end # describe '#sign' do
 
   describe '#submit' do
