@@ -53,7 +53,7 @@ class EC2Signature
     self
   end
 
-  def submit action='DescribeInstances', actionparams={}, timestamp=Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+  def submit action='DescribeInstances', actionparams={}, timestamp=Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ"), raw=false
     require 'crack' 
     sign action, actionparams, timestamp
     http = Net::HTTP.new host, port
@@ -61,7 +61,7 @@ class EC2Signature
       when 'GET' then http.get path.concat('?'+signature)
       when 'POST' then http.post path, signature
     end
-    result = Crack::XML.parse(resp.body)[action.concat('Response')]
+    raw ? resp.body : Crack::XML.parse(resp.body)[action.concat('Response')]
   end
 
 end
