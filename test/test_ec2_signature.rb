@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'cgi'
 
 $creds = {:awsaccessid => 'abc123', :awssecretkey => '12i3jfae138', :ec2url => 'http://blah.com:112/some/yo'}
 
@@ -78,10 +79,23 @@ describe EC2Signature do
       @ec2.signature.wont_be_nil
     end
     it 'should default to DescribeInstances action param' do
-      @ec2.signature.must_match /Action=DescribeInstances/
+      @ec2.sign.signature.must_match /Action=DescribeInstances/
     end
     it 'should allow custom ec2 action string' do
-assert true
+      @ec2.sign('DescribeImages').signature.must_match /Action=DescribeImages/
+    end
+    it 'should allow custom ec2 action strings that have more than one query param' do
+      actionparams = {'Name' => 'ami1390'}
+      @ec2.sign('DescribeImage', actionparams).signature.must_match /Action=DescribeImage&Name=ami1390/
+    end
+    it 'should allow specify a timestamp' do
+      timestamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+      @ec2.sign('DescribeInstances',{},timestamp).signature.must_match /Timestamp=#{CGI::escape timestamp}/
+    end
+    it 'should return an ec2 compatible signature' do
+      known_timestamp = '2011-02-20T06:25:50Z'
+      known_signature = 'AWSAccessKeyId=abc123&Action=DescribeInstances&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-02-20T06%3A25%3A50Z&Version=2010-08-31&Signature=0fuHYXhygt2osdqtnRww1WFR2nHMwk0wvhiCOxuS3AY%3D'
+      @ec2.sign('DescribeInstances',{},known_timestamp).signature.must_equal known_signature
     end
   end
 
