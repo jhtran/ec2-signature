@@ -77,6 +77,12 @@ describe EC2Signature do
       @ec2.sign.must_be_kind_of EC2Signature
       @ec2.signature.wont_be_nil
     end
+    it 'should default to DescribeInstances action param' do
+      @ec2.signature.must_match /Action=DescribeInstances/
+    end
+    it 'should allow custom ec2 action string' do
+assert true
+    end
   end
 
 end

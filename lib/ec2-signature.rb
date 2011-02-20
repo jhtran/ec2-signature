@@ -35,7 +35,7 @@ class EC2Signature
       'AWSAccessKeyId'    => newaccessid,
       'SignatureMethod'   => 'HmacSHA256',
       'SignatureVersion'  => '2',
-      'Timestamp'         => timestamp
+      'Timestamp'         => timestamp,
       'Version'           => '2010-08-31'
     })
 
