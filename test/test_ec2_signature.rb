@@ -2,6 +2,7 @@ require 'test_helper'
 require 'cgi'
 
 $creds = {:awsaccessid => 'abc123', :awssecretkey => '12i3jfae138', :ec2url => 'http://blah.com:112/some/yo'}
+$timestamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 describe EC2Signature do
   describe '#new' do
@@ -89,14 +90,40 @@ describe EC2Signature do
       @ec2.sign('DescribeImage', actionparams).signature.must_match /Action=DescribeImage&Name=ami1390/
     end
     it 'should allow specify a timestamp' do
-      timestamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-      @ec2.sign('DescribeInstances',{},timestamp).signature.must_match /Timestamp=#{CGI::escape timestamp}/
+      @ec2.sign('DescribeInstances',{},$timestamp).signature.must_match /Timestamp=#{CGI::escape $timestamp}/
     end
     it 'should return an ec2 compatible signature' do
       known_timestamp = '2011-02-20T06:25:50Z'
       known_signature = 'AWSAccessKeyId=abc123&Action=DescribeInstances&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-02-20T06%3A25%3A50Z&Version=2010-08-31&Signature=0fuHYXhygt2osdqtnRww1WFR2nHMwk0wvhiCOxuS3AY%3D'
       @ec2.sign('DescribeInstances',{},known_timestamp).signature.must_equal known_signature
     end
-  end
+  end # describe '#sign' do
+
+  describe '#submit' do
+    $xml = "<?xml version=\"1.0\" ?><DescribeInstancesResponse xmlns=\"http://ec2.amazonaws.com/doc/2010-08-31/\"><requestId>G4DU2RXB59NMIX84UW9F</requestId><reservationSet><item><ownerId>jsmith</ownerId><groupSet><item><groupId>default</groupId></item></groupSet><reservationId>r-5oexkoz1</reservationId><instancesSet><item><displayDescription/><displayName>Server 198</displayName><keyName>None (jsmith, cm-02)</keyName><instanceId>i-000000c6</instanceId><instanceState><code>1</code><name>running</name></instanceState><publicDnsName/><imageId>ami-usc3oydl</imageId><productCodesSet/><privateDnsName>10.1.1.17</privateDnsName><dnsName>10.1.1.17</dnsName><launchTime>2011-02-20 07:17:03</launchTime><placement><availabilityZone>nova</availabilityZone></placement><amiLaunchIndex>0</amiLaunchIndex><instanceType>m1.small</instanceType></item></instancesSet></item></reservationSet></DescribeInstancesResponse>"
+
+    before do
+      FakeWeb.register_uri(:post, $creds[:ec2url], :body => $xml)
+      @ec2 = EC2Signature.new $creds
+    end
+
+    it 'by default should submit via POST' do
+      @ec2.submit.must_be_kind_of Hash
+    end
+    it 'should allow you to also submit via GET' do
+      FakeWeb.register_uri(:get, %r|#{$creds[:ec2url]}|, :body => $xml)
+      @ec2.method = 'GET'
+      @ec2.submit.must_be_kind_of Hash
+    end
+    it 'by default should return a Hash' do
+      @ec2.submit.must_be_kind_of Hash
+    end
+    it 'should allow you to return the raw xml instead of Hash' do
+      # the catch is that you won't be able to use the default arg param values
+      raw = @ec2.submit('DescribeInstances', {}, $timestamp, true)
+      raw.must_be_kind_of String
+      raw.must_match /<?xml version=\"1.0\"/
+    end
+  end # describe '#submit' do
 
 end
